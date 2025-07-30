@@ -701,7 +701,7 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
       </p>
 
       <div className="space-y-4">
-        {/* Model Selection */}
+        {/* Model Selection  */}
         <div className="flex items-center">
           <label
             htmlFor={`${agentName}-model`}
@@ -726,7 +726,7 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
         </div>
 
         {/* Temperature Slider */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <label
             htmlFor={`${agentName}-temperature`}
             className={`w-24 text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -766,11 +766,11 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                 aria-label={`${agentName} temperature number input`}
               />
             </div>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
 
         {/* Top P Slider */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <label
             htmlFor={`${agentName}-topP`}
             className={`w-24 text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -811,10 +811,10 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
               />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Reasoning Effort Selector (only for O-series models) */}
-        {selectedModels[agentName] && isOpenAIOModel(selectedModels[agentName]) && (
+        {/* {selectedModels[agentName] && isOpenAIOModel(selectedModels[agentName]) && (
           <div className="flex items-center">
             <label
               htmlFor={`${agentName}-reasoning-effort`}
@@ -833,7 +833,7 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
               </select>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

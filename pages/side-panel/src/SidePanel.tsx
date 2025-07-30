@@ -1039,13 +1039,13 @@ const SidePanel = () => {
                 </button>
               </>
             )}
-            <a
+            {/* <a
               href="https://discord.gg/NN3ABHggMK"
               target="_blank"
               rel="noopener noreferrer"
               className={`header-icon ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-400 hover:text-sky-500'}`}>
               <RxDiscordLogo size={20} />
-            </a>
+            </a> */}
             <button
               type="button"
               onClick={() => chrome.runtime.openOptionsPage()}
