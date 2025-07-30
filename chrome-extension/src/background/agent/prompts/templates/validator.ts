@@ -25,10 +25,19 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: ask the user to sign in by themselves
-5. If the output is correct and the task is completed, you should respond with 
+5. If the task is to specify the name and the surname of professor, you should respond with:
+  - is_valid: true
+  - reason: describe the reason why it is valid although the task is not completed yet
+  - answer: ask the user to input the name and surname of the wanted professor by themselves
+6. If the task is to specify the date pf the consultation, you should respond with:
+  - is_valid: true
+  - reason: describe the reason why it is valid although the task is not completed yet
+  - answer: ask the user to input the date of the wanted consultation by themselves
+7. If the output is correct and the task is completed, you should respond with 
   - is_valid: true
   - reason: "Task completed"
   - answer: The final answer to the task
+
 
 # RESPONSE FORMAT: You must ALWAYS respond with valid JSON in this exact format:
 {
