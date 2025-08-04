@@ -29,7 +29,7 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: ask the user to input the name and surname of the wanted professor by themselves
-6. If the task is to specify the date pf the consultation, you should respond with:
+6. If the task is to specify the date of the consultation, you should respond with:
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: ask the user to input the date of the wanted consultation by themselves

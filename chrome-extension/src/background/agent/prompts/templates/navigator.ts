@@ -128,10 +128,41 @@ Common action sequences:
 - If the webpage shows more than one result for professor after the search, NEVER click on the link by yourself. Instead execute the DONE action to ask users to specify both the name and surname of the professor in a brief message.
 - Don't need to provide instructions on how to specify the name and surname, just ask users to specify the name and surname of the wanted professor.
 
-13. Multiple dates for consultations slots
+13. Multiple dates for consultation slots
 
-- If the webpage shows more than one date for conusltations schedules after the wanted professor is opened, NEVER click on the link or button by yourself. Instead execute the DONE action to ask users to specify wanted date of consultation in a brief message.
-- Don't need to provide instructions on how to specify the date, just ask users to specify the date of the consultation slot they want to schedule.
+- MANDATORY CHECK: Before clicking ANY consultation-related button ('Пријави се', 'Schedule', 'Book', etc.), ALWAYS count how many consultation slots are visible on the page.
+
+- IF there are 2 OR MORE 'Пријави се' buttons visible:
+  1. STOP immediately - do NOT click anything
+  2. Check the original user request for EXPLICIT date/time specification
+  3. ONLY proceed if user request contains:
+     - Exact dates: "December 15", "Monday", "tomorrow", "15.12.2024"
+     - Exact times: "10:00", "morning", "afternoon" 
+     - Priority keywords: "earliest", "latest", "first available", "most recent", "soonest", "најрано", "најдоцна"
+  4. IF NO explicit date/time/priority found in user request:
+     - Execute DONE action immediately
+     - Set success to false
+     - Message: "Multiple consultation slots are available. Please specify which date and time you prefer."
+     - DO NOT click any buttons or links
+
+- IF there is only 1 consultation slot visible:
+  - Proceed to click the consultation button normally
+
+- CRITICAL: The word "закажи" (schedule) or "consultation" alone does NOT count as date/time specification.
+
+- This rule applies EVERY TIME before clicking consultation-related elements, regardless of previous actions.
+
+  {% comment %} - ALWAYS check if the user has EXPLICITLY and CLEARLY specified a particular date/time in their original request
+  - User must use EXPLICIT temporal keywords like: "earliest", "latest", "first available", "most recent", "soonest", or specify exact dates/times
+  - Generic scheduling words like "закажи" (schedule), "book", "arrange" WITHOUT specific time preference do NOT count as temporal specification
+  - If user specified explicit temporal preference (e.g., "earliest available", "next Monday", "December 15th") → proceed to click the appropriate slot
+  - If NO EXPLICIT date/time preference was given in the user's request NEVER click on any link or button by yourself instead execute DONE action
+  
+- When executing DONE due to multiple slots without user preference:
+  - Set success to false
+  - List the available dates/times found on the page in your done message
+
+- This rule applies when there are 2 or more distinct consultation options visible on the page {% endcomment %}
 
 14. Plan:
 
