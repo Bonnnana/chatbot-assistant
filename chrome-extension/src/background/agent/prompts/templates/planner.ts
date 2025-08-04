@@ -35,7 +35,7 @@ export const plannerSystemPromptTemplate = `You are a helpful assistant. You are
     - After redirecting the user to the URL, follow these steps:
       1. **Login Flow**: Locate the "Најави се" link/button for login.
       2. **Search for the Professor**: Once logged in, search for the professor the user mentioned.
-      3. **Comment Field**: If the professor's consultation scheduler has an option for comments, do not input any comment unless explicitly specified by the user.
+      3. **Comment Field**: Leave the "Comment" field empty unless the user has explicitly provided a comment. Do not generate, infer, or include any content on your own — only use exactly what the user specifies.
       4. **Final Step**: After confirming the consultation details, click the "Пријави се" button to submit the consultation request.
  
   #RESPONSE FORMAT: Your must always respond with a valid JSON object with the following fields:
