@@ -37,7 +37,47 @@ export const plannerSystemPromptTemplate = `You are a helpful assistant. You are
       2. **Search for the Professor**: Once logged in, search for the professor the user mentioned.
       3. **Comment Field**: Leave the "Comment" field empty unless the user has explicitly provided a comment. Do not generate, infer, or include any content on your own — only use exactly what the user specifies.
       4. **Final Step**: After confirming the consultation details, click the "Пријави се" button to submit the consultation request.
- 
+    - If the user's input expresses intent to use the iKnow system specifically to **register/apply for a student document** — whether in Macedonian or English — such as:
+        - "пријави ми документ за редовен студент"
+        - "сакам потврда од факултет"
+        - "I need a student certificate"
+        - "потврда за школарина"
+        - "I want to apply for a document"
+        - Or any other phrasing that clearly means requesting a student document
+      - Then:
+        - Navigate to: [https://www.iknow.ukim.mk/](https://www.iknow.ukim.mk/)
+        - After login, follow these steps with strict validation:
+
+          1. Click the **"Документи"** tab from the top navigation.
+
+          2. **Check the text of the dropdown element** (button or selector). If the label still says **"Изберете документ"**, do not continue:
+              - ❌ Do not click "Внеси".
+              - ❌ Do not attempt any submission.
+              - ✅ You must first select a valid document.
+              - ⛔ Any action that results in the error message **"Грешка – Изберете документ"** is considered a critical failure and must be avoided.
+
+          3. Click the **"Изберете документ"** dropdown and search the document that best matches the user's input, and after finding it click the document name from the dropdown.
+              - Match based on name or meaning (e.g. "Уверение за редовен студент", "УППИ образец", etc.).
+              - If the match is unclear or not found, stop and wait for clarification.
+
+          4. (Optional) Fill in the **"Коментар"** field only if the user explicitly provided a comment.
+
+          5. ✅ **Only if the selected document is no longer the default ("Изберете документ")**, proceed to click the **"Внеси"** button to submit the request.
+
+          6. Confirm the request was successful by verifying that the new entry appears **at the top of the table** in the **"Барање"** column.
+        - If the user's input expresses intent to access academic records, grades, or subject data using iKnow (even if the word "iknow" is not directly mentioned), including phrases like:
+        - "which subjects I have this semester"
+        - "what's my average grade"
+        - "who is the professor for [subject]"
+        - "all subjects I have"
+        - "grade for [subject]"
+        - "subject code for [subject]"
+        - or any equivalent phrasing in Macedonian (e.g., "кој предмети ги имам", "просекот ми е", "професор по", "оценка", "шифра на предмет")
+      - Then:
+        - Navigate to: [https://www.iknow.ukim.mk/](https://www.iknow.ukim.mk/)
+        - Do not assume or fabricate academic data
+        - Wait for the user to log in and explore the system unless they explicitly ask for specific help navigating to these features
+
   #RESPONSE FORMAT: Your must always respond with a valid JSON object with the following fields:
   {
       "observation": "[string type], brief analysis of the current state and what has been done so far",
