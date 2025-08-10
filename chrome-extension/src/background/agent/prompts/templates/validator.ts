@@ -33,7 +33,11 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: ask the user to input the date of the wanted consultation by themselves
-7. If the output is correct and the task is completed, you should respond with 
+7. If there are multiple similar dropdown options, you should respond with:
+  - is_valid: true
+  - reason: describe the reason why it is valid although the task is not completed yet
+  - answer: ask the user to specify which option they want from the available choices
+8. If the output is correct and the task is completed, you should respond with 
   - is_valid: true
   - reason: "Task completed"
   - answer: The final answer to the task
