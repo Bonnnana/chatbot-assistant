@@ -169,7 +169,7 @@ export default function ChatInput({
               type="submit"
               disabled={isSendButtonDisabled}
               aria-disabled={isSendButtonDisabled}
-              className={`rounded-md bg-[#19C2FF] px-3 py-1 text-white transition-colors hover:enabled:bg-[#0073DC] ${isSendButtonDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
+              className={`rounded-md bg-[#EC4899] px-3 py-1 text-white transition-colors hover:enabled:bg-[#BE185D] ${isSendButtonDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
               Send
             </button>
           )}

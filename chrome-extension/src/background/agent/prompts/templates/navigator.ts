@@ -164,7 +164,50 @@ Common action sequences:
 
 - This rule applies when there are 2 or more distinct consultation options visible on the page {% endcomment %}
 
-14. Plan:
+14. FINKI Courses Navigation:
+
+- When on the FINKI courses page (courses.finki.ukim.mk), follow these specific navigation rules:
+  1. **Course Search Process**:
+     - First, look for the "My courses" or "Мои курсеви" section
+     - Extract the subject name from the user's original request
+     - Handle both full subject names and shortened forms (e.g., "PD" for "Programming Development", "DS" for "Database Systems", "WD" for "Web Development")
+     - Common abbreviations to recognize: PD, DS, WD, AI, ML, OS, CN, SE, etc.
+  
+  2. **Systematic Scrolling**:
+     - Use cache_content action before scrolling to preserve current findings
+     - Scroll slowly using next_page action (ONE page at a time)
+     - After each scroll, analyze the visible courses for matches
+     - Look for exact matches, partial matches, and abbreviation matches
+     - Continue scrolling until the subject is found or maximum 10 scrolls reached
+  
+  3. **Subject Identification**:
+     - Match subjects by full name, partial name, or common abbreviations
+     - Consider variations in naming (e.g., "Programming" vs "Програмирање")
+     - If multiple similar subjects found, prioritize exact matches
+  
+  4. **Course Access**:
+     - Once the target subject is found, click on it to access course content
+     - Navigate within the course to find specific content (assignments, surveys, materials)
+     - Use the user's original request to determine what specific content to look for
+  
+  5. **Calendar Navigation for Date Queries**:
+     - When users ask about assignments, surveys, or homework on specific dates or deadlines:
+       - **Find Calendar Section**: Look for calendar, timeline, or schedule features within the course
+       - **Date Search**: Use calendar navigation to find specific dates mentioned by the user
+       - **Deadline Checking**: Look for due dates, submission deadlines, or expiration dates
+       - **Time-Based Filtering**: Use date filters to show content for specific time periods
+       - **Calendar Views**: Navigate between different calendar views (monthly, weekly, daily) if available
+       - **Assignment Calendar**: Look for assignment-specific calendar that shows:
+         - Due dates for homework
+         - Survey availability periods
+         - Exam dates and deadlines
+         - Course milestones and important dates
+       - **Date Range Queries**: For queries like "homework till [date]" or "assignments from [date] to [date]":
+         - Use calendar navigation to set date ranges
+         - Filter assignments and surveys by date periods
+         - Show upcoming deadlines within specified timeframes
+
+15. Plan:
 
 - Plan is a json string wrapped by the <plan> tag
 - If a plan is provided, follow the instructions in the next_steps exactly first
