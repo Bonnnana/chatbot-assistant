@@ -1544,8 +1544,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
               onClick={() => setIsProviderSelectorOpen(prev => !prev)}
               className={`flex w-full items-center justify-center font-medium ${
                 isDarkMode
-                  ? 'border-blue-700 bg-blue-600 text-white hover:bg-blue-500'
-                  : 'border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  ? 'border-[#4a8bb8] bg-[#4a8bb8] text-white hover:bg-[#58a0c8]'
+                  : 'border-[#4a8bb8] bg-[#4a8bb8] text-white hover:bg-[#58a0c8]'
               }`}>
               <span className="mr-2 text-sm">+</span> <span className="text-sm">Add New Provider</span>
             </Button>
@@ -1574,8 +1574,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                         type="button"
                         className={`flex w-full items-center px-4 py-3 text-left text-sm ${
                           isDarkMode
-                            ? 'text-blue-200 hover:bg-blue-600/30 hover:text-white'
-                            : 'text-blue-700 hover:bg-blue-100 hover:text-blue-800'
+                            ? 'text-[#4a8bb8] hover:bg-[#4a8bb8]/30 hover:text-white'
+                            : 'text-[#4a8bb8] hover:bg-[#4a8bb8]/30 hover:text-white'
                         } transition-colors duration-150`}
                         onClick={() => handleProviderSelection(type)}>
                         <span className="font-medium">{getDefaultDisplayNameFromProviderId(type)}</span>
@@ -1587,8 +1587,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                     type="button"
                     className={`flex w-full items-center px-4 py-3 text-left text-sm ${
                       isDarkMode
-                        ? 'text-blue-200 hover:bg-blue-600/30 hover:text-white'
-                        : 'text-blue-700 hover:bg-blue-100 hover:text-blue-800'
+                        ? 'text-[#4a8bb8] hover:bg-[#4a8bb8]/30 hover:text-white'
+                        : 'text-[#4a8bb8] hover:bg-[#4a8bb8]/30 hover:text-white'
                     } transition-colors duration-150`}
                     onClick={() => handleProviderSelection(ProviderTypeEnum.CustomOpenAI)}>
                     <span className="font-medium">OpenAI-compatible API Provider</span>

@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "Automate web tasks with AI! NanoBrowser is an open-source Chrome extension that lets you extract data, fill forms, and more."
+    "message": "Access university services with ease! FINKI AI Assistant helps you check grades, register courses, submit requests, and more — automatically."
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Nanobrowser: AI Web Agent & Automation"
+    "message": "FINKI AI Assistant"
   },
   "toggleTheme": {
     "message": "Toggle theme"

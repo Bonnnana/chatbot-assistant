@@ -24,6 +24,57 @@ let currentPort: chrome.runtime.Port | null = null;
 // Setup side panel behavior
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => console.error(error));
 
+// Function to update extension icon based on theme
+async function updateExtensionIcon(isDarkMode: boolean) {
+  try {
+    // When it's dark mode, use light logo for contrast
+    // When it's light mode, use dark logo for contrast
+    const iconPath = isDarkMode ? 'finki_logo_darkk.png' : 'finki_logo-removebg-preview.png';
+    console.log('Updating extension icon:', iconPath, 'for', isDarkMode ? 'dark' : 'light', 'mode');
+
+    await chrome.action.setIcon({
+      path: {
+        16: iconPath,
+        32: iconPath,
+        48: iconPath,
+        128: iconPath,
+      },
+    });
+    console.log('Extension icon successfully updated to:', iconPath);
+  } catch (error) {
+    console.error('Failed to update extension icon:', error);
+  }
+}
+
+// Function to detect system theme
+async function detectSystemTheme(): Promise<boolean> {
+  try {
+    // Get the current active tab
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length > 0 && tabs[0].id) {
+      // Try to detect theme from the current tab
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => window.matchMedia('(prefers-color-scheme: dark)').matches,
+      });
+      return results[0]?.result || false;
+    }
+    return false;
+  } catch (error) {
+    console.log('Could not detect theme from tab, defaulting to light mode');
+    return false; // Default to light mode
+  }
+}
+
+// Update icon on startup with a delay to ensure extension is fully loaded
+setTimeout(async () => {
+  const isDarkMode = await detectSystemTheme();
+  updateExtensionIcon(isDarkMode);
+}, 1000);
+
+// Listen for theme changes from side panel messages
+// The side panel will send theme change notifications
+
 // Function to check if script is already injected
 async function isScriptInjected(tabId: number): Promise<boolean> {
   try {
@@ -84,7 +135,10 @@ chrome.tabs.onRemoved.addListener(tabId => {
 logger.info('background loaded');
 
 // Listen for simple messages (e.g., from options page)
-chrome.runtime.onMessage.addListener(() => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'THEME_CHANGE') {
+    updateExtensionIcon(message.isDarkMode);
+  }
   // Handle other message types if needed in the future
   // Return false if response is not sent asynchronously
   // return false;

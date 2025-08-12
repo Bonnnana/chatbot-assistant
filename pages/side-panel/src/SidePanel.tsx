@@ -51,8 +51,13 @@ const SidePanel = () => {
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     setIsDarkMode(darkModeMediaQuery.matches);
 
+    // Send initial theme state to background script
+    chrome.runtime.sendMessage({ type: 'THEME_CHANGE', isDarkMode: darkModeMediaQuery.matches });
+
     const handleChange = (e: MediaQueryListEvent) => {
       setIsDarkMode(e.matches);
+      // Notify background script about theme change
+      chrome.runtime.sendMessage({ type: 'THEME_CHANGE', isDarkMode: e.matches });
     };
 
     darkModeMediaQuery.addEventListener('change', handleChange);
@@ -761,43 +766,6 @@ const SidePanel = () => {
     }
   };
 
-  const handleBookmarkUpdateTitle = async (id: number, title: string) => {
-    try {
-      await favoritesStorage.updatePromptTitle(id, title);
-
-      // Update favorites in the UI
-      const prompts = await favoritesStorage.getAllPrompts();
-      setFavoritePrompts(prompts);
-    } catch (error) {
-      console.error('Failed to update favorite prompt title:', error);
-    }
-  };
-
-  const handleBookmarkDelete = async (id: number) => {
-    try {
-      await favoritesStorage.removePrompt(id);
-
-      // Update favorites in the UI
-      const prompts = await favoritesStorage.getAllPrompts();
-      setFavoritePrompts(prompts);
-    } catch (error) {
-      console.error('Failed to delete favorite prompt:', error);
-    }
-  };
-
-  const handleBookmarkReorder = async (draggedId: number, targetId: number) => {
-    try {
-      // Directly pass IDs to storage function - it now handles the reordering logic
-      await favoritesStorage.reorderPrompts(draggedId, targetId);
-
-      // Fetch the updated list from storage to get the new IDs and reflect the authoritative order
-      const updatedPromptsFromStorage = await favoritesStorage.getAllPrompts();
-      setFavoritePrompts(updatedPromptsFromStorage);
-    } catch (error) {
-      console.error('Failed to reorder favorite prompts:', error);
-    }
-  };
-
   // Load favorite prompts from storage
   useEffect(() => {
     const loadFavorites = async () => {
@@ -1000,20 +968,19 @@ const SidePanel = () => {
 
   return (
     <div>
-      <div
-        className={`flex h-screen flex-col ${isDarkMode ? 'bg-slate-900' : "bg-[url('/bg.jpg')] bg-cover bg-no-repeat"} overflow-hidden border ${isDarkMode ? 'border-sky-800' : 'border-[rgb(186,230,253)]'} rounded-2xl`}>
+      <div className={`flex h-screen flex-col bg-[#113F67] overflow-hidden border border-[#FDF5AA] rounded-2xl`}>
         <header className="header relative">
           <div className="header-logo">
             {showHistory ? (
               <button
                 type="button"
                 onClick={() => handleBackToChat(false)}
-                className={`${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-400 hover:text-sky-500'} cursor-pointer`}
+                className={`${isDarkMode ? 'text-[#58A0C8] hover:text-[#4A8BB8]' : 'text-[#58A0C8] hover:text-[#4A8BB8]'} cursor-pointer`}
                 aria-label="Back to chat">
                 ← Back
               </button>
             ) : (
-              <img src="/icon-128.png" alt="Extension Logo" className="size-6" />
+              <img src="/icon-128.png" alt="Extension Logo" className="size-12" />
             )}
           </div>
           <div className="header-icons">
@@ -1023,7 +990,7 @@ const SidePanel = () => {
                   type="button"
                   onClick={handleNewChat}
                   onKeyDown={e => e.key === 'Enter' && handleNewChat()}
-                  className={`header-icon ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-400 hover:text-sky-500'} cursor-pointer`}
+                  className={`header-icon ${isDarkMode ? 'text-[#58A0C8] hover:text-[#4A8BB8]' : 'text-[#58A0C8] hover:text-[#4A8BB8]'} cursor-pointer`}
                   aria-label="New Chat"
                   tabIndex={0}>
                   <PiPlusBold size={20} />
@@ -1032,7 +999,7 @@ const SidePanel = () => {
                   type="button"
                   onClick={handleLoadHistory}
                   onKeyDown={e => e.key === 'Enter' && handleLoadHistory()}
-                  className={`header-icon ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-400 hover:text-sky-500'} cursor-pointer`}
+                  className={`header-icon ${isDarkMode ? 'text-[#58A0C8] hover:text-[#4A8BB8]' : 'text-[#58A0C8] hover:text-[#4A8BB8]'} cursor-pointer`}
                   aria-label="Load History"
                   tabIndex={0}>
                   <GrHistory size={20} />
@@ -1050,7 +1017,7 @@ const SidePanel = () => {
               type="button"
               onClick={() => chrome.runtime.openOptionsPage()}
               onKeyDown={e => e.key === 'Enter' && chrome.runtime.openOptionsPage()}
-              className={`header-icon ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-400 hover:text-sky-500'} cursor-pointer`}
+              className={`header-icon ${isDarkMode ? 'text-[#58A0C8] hover:text-[#4A8BB8]' : 'text-[#58A0C8] hover:text-[#4A8BB8]'} cursor-pointer`}
               aria-label="Settings"
               tabIndex={0}>
               <FiSettings size={20} />
@@ -1073,7 +1040,7 @@ const SidePanel = () => {
             {/* Show loading state while checking model configuration */}
             {hasConfiguredModels === null && (
               <div
-                className={`flex flex-1 items-center justify-center p-8 ${isDarkMode ? 'text-sky-300' : 'text-sky-600'}`}>
+                className={`flex flex-1 items-center justify-center p-8 ${isDarkMode ? 'text-sky-300' : 'text-sky-300'}`}>
                 <div className="text-center">
                   <div className="mx-auto mb-4 size-8 animate-spin rounded-full border-2 border-sky-400 border-t-transparent"></div>
                   <p>Checking configuration...</p>
@@ -1084,37 +1051,22 @@ const SidePanel = () => {
             {/* Show setup message when no models are configured */}
             {hasConfiguredModels === false && (
               <div
-                className={`flex flex-1 items-center justify-center p-8 ${isDarkMode ? 'text-sky-300' : 'text-sky-600'}`}>
+                className={`flex flex-1 items-center justify-center p-8 ${isDarkMode ? 'text-sky-300' : 'text-sky-300'}`}>
                 <div className="max-w-md text-center">
-                  <img src="/icon-128.png" alt="Nanobrowser Logo" className="mx-auto mb-4 size-12" />
-                  <h3 className={`mb-2 text-lg font-semibold ${isDarkMode ? 'text-sky-200' : 'text-sky-700'}`}>
-                    Welcome to Nanobrowser!
+                  <img src="/icon-128.png" alt="FINKI AI Assistant Logo" className="mx-auto mb-4 size-16" />
+                  <h3 className={`mb-2 text-lg font-semibold ${isDarkMode ? 'text-sky-200' : 'text-sky-200'}`}>
+                    Welcome to FINKI AI Assistant!
                   </h3>
                   <p className="mb-4">To get started, please configure your API keys in the settings page.</p>
                   <button
                     onClick={() => chrome.runtime.openOptionsPage()}
                     className={`my-4 rounded-lg px-4 py-2 font-medium transition-colors ${
-                      isDarkMode ? 'bg-sky-600 text-white hover:bg-sky-700' : 'bg-sky-500 text-white hover:bg-sky-600'
+                      isDarkMode
+                        ? 'bg-[#58A0C8] text-white hover:bg-[#4A8BB8]'
+                        : 'bg-[#58A0C8] text-white hover:bg-[#4A8BB8]'
                     }`}>
                     Open Settings
                   </button>
-                  <div className="mt-4 text-sm opacity-75">
-                    <a
-                      href="https://github.com/nanobrowser/nanobrowser?tab=readme-ov-file#-quick-start"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-700 hover:text-sky-600'}`}>
-                      Quick Start Guide
-                    </a>
-                    <span className="mx-2">•</span>
-                    <a
-                      href="https://discord.gg/NN3ABHggMK"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-700 hover:text-sky-600'}`}>
-                      Join Our Community
-                    </a>
-                  </div>
                 </div>
               </div>
             )}
@@ -1124,8 +1076,7 @@ const SidePanel = () => {
               <>
                 {messages.length === 0 && (
                   <>
-                    <div
-                      className={`border-t ${isDarkMode ? 'border-sky-900' : 'border-sky-100'} mb-2 p-2 shadow-sm backdrop-blur-sm`}>
+                    <div className={`border-t border-[#FDF5AA] mb-2 p-2 shadow-sm backdrop-blur-sm`}>
                       <ChatInput
                         onSendMessage={handleSendMessage}
                         onStopTask={handleStopTask}
@@ -1146,9 +1097,6 @@ const SidePanel = () => {
                       <BookmarkList
                         bookmarks={favoritePrompts}
                         onBookmarkSelect={handleBookmarkSelect}
-                        onBookmarkUpdateTitle={handleBookmarkUpdateTitle}
-                        onBookmarkDelete={handleBookmarkDelete}
-                        onBookmarkReorder={handleBookmarkReorder}
                         isDarkMode={isDarkMode}
                       />
                     </div>

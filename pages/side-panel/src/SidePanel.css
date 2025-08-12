@@ -30,27 +30,12 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ec4899;
+  background: #FDF5AA;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #be185d;
-}
-
-/* Dark mode scrollbar */
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-track {
-    background: #1e293b;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: #ec4899;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: #f472b6;
-  }
+  background: #FDF5AA;
 }
 
 /* Used classes from the component */
@@ -60,14 +45,7 @@ code {
   align-items: center;
   padding: 0.75rem;
   background-color: transparent;
-  border-bottom: 1px solid rgba(236, 72, 153, 0.2);
-}
-
-/* Dark mode header border */
-@media (prefers-color-scheme: dark) {
-  .header {
-    border-bottom: 1px solid rgba(236, 72, 153, 0.3);
-  }
+  border-bottom: 0.05px solid #FDF5AA;
 }
 
 .header-logo {
@@ -82,26 +60,26 @@ code {
 }
 
 .header-icon {
-  color: #EC4899;
+  color: #58A0C8;
   cursor: pointer;
   transition: color 0.2s ease;
   opacity: 0.8;
 }
 
 .header-icon:hover {
-  color: #BE185D;
+  color: #4A8BB8;
   opacity: 1;
 }
 
 .send-button {
-  color: #EC4899;
+  color: #58A0C8;
   cursor: pointer;
   transition: color 0.2s ease;
   opacity: 0.8;
 }
 
 .send-button:hover {
-  color: #BE185D;
+  color: #4A8BB8;
   opacity: 1;
 }
 
@@ -126,27 +104,12 @@ code {
 }
 
 .scrollbar-gutter-stable::-webkit-scrollbar-thumb {
-  background: #f9a8d4;  /* pink-300 - very light pink */
+  background: #FDF5AA;
   border-radius: 4px;
 }
 
 .scrollbar-gutter-stable::-webkit-scrollbar-thumb:hover {
-  background: #f472b6;  /* pink-400 - slightly darker on hover */
-}
-
-/* Dark mode scrollbar for scrollbar-gutter-stable */
-@media (prefers-color-scheme: dark) {
-  .scrollbar-gutter-stable::-webkit-scrollbar-track {
-    background: #1e293b;  /* slate-800 */
-  }
-  
-  .scrollbar-gutter-stable::-webkit-scrollbar-thumb {
-    background: #ec4899;  /* pink-500 */
-  }
-  
-  .scrollbar-gutter-stable::-webkit-scrollbar-thumb:hover {
-    background: #f472b6;  /* pink-400 */
-  }
+  background: #FDF5AA;
 }
 
 /* Dark mode text and background colors */

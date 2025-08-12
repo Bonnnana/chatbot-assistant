@@ -14,9 +14,9 @@ export function Button({ theme, variant = 'primary', className, disabled, childr
         'py-1 px-4 rounded shadow transition-all',
         {
           // Primary variant
-          'bg-pink-500 hover:bg-pink-600 text-white hover:scale-105':
+          'bg-[#58A0C8] hover:bg-[#4A8BB8] text-white hover:scale-105':
             variant === 'primary' && !disabled && theme !== 'dark',
-          'bg-pink-600 hover:bg-pink-700 text-white hover:scale-105':
+          'bg-[#58A0C8] hover:bg-[#4A8BB8] text-white hover:scale-105':
             variant === 'primary' && !disabled && theme === 'dark',
           'bg-gray-400 text-gray-600 cursor-not-allowed': variant === 'primary' && disabled,
 

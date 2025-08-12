@@ -39,7 +39,7 @@ function withOperaSidebar(manifest) {
   return deepmerge(manifest, {
     sidebar_action: {
       default_panel: 'side-panel/index.html',
-      default_title: 'Nanobrowser',
+      default_title: 'FINKI AI Assistant',
       default_icon: 'icon-32.png',
     },
   });
@@ -68,10 +68,11 @@ const manifest = withOperaSidebar(
       type: 'module',
     },
     action: {
-      default_icon: 'icon-32.png',
+      default_icon: 'finki_logo_darkk.png',
     },
     icons: {
-      128: 'icon-128.png',
+      64: 'finki_logo_darkk.png',
+      128: 'finki_logo_darkk.png',
     },
     content_scripts: [
       {
@@ -85,8 +86,8 @@ const manifest = withOperaSidebar(
           '*.js',
           '*.css',
           '*.svg',
-          'icon-128.png',
-          'icon-32.png',
+          'finki_logo-removebg-preview.png',
+          'finki_logo_darkk.png',
           'permission/index.html',
           'permission/permission.js',
         ],
