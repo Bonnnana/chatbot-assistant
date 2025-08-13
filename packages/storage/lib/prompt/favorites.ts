@@ -131,6 +131,16 @@ export function createFavoritesStorage(): FavoritePromptsStorage {
       return updatedPrompt;
     },
 
+    removePrompt: async (id: number): Promise<void> => {
+      await favoritesStorage.set(prev => {
+        const updatedPrompts = prev.prompts.filter(prompt => prompt.id !== id);
+        return {
+          ...prev,
+          prompts: updatedPrompts,
+        };
+      });
+    },
+
     getAllPrompts: async (): Promise<FavoritePrompt[]> => {
       const currentState = await favoritesStorage.get();
       let prompts = currentState.prompts;

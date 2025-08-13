@@ -78,6 +78,17 @@ const SidePanel = () => {
     }
   }, []);
 
+  // Load favorite prompts
+  const loadFavoritePrompts = useCallback(async () => {
+    try {
+      const prompts = await favoritesStorage.getAllPrompts();
+      setFavoritePrompts(prompts);
+    } catch (error) {
+      console.error('Error loading favorite prompts:', error);
+      setFavoritePrompts([]);
+    }
+  }, []);
+
   // Load general settings to check if replay is enabled
   const loadGeneralSettings = useCallback(async () => {
     try {
@@ -93,7 +104,8 @@ const SidePanel = () => {
   useEffect(() => {
     checkModelConfiguration();
     loadGeneralSettings();
-  }, [checkModelConfiguration, loadGeneralSettings]);
+    loadFavoritePrompts();
+  }, [checkModelConfiguration, loadGeneralSettings, loadFavoritePrompts]);
 
   // Re-check model configuration when the side panel becomes visible again
   useEffect(() => {
@@ -102,6 +114,7 @@ const SidePanel = () => {
         // Panel became visible, re-check configuration and settings
         checkModelConfiguration();
         loadGeneralSettings();
+        loadFavoritePrompts();
       }
     };
 
@@ -109,6 +122,7 @@ const SidePanel = () => {
       // Panel gained focus, re-check configuration and settings
       checkModelConfiguration();
       loadGeneralSettings();
+      loadFavoritePrompts();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -118,7 +132,7 @@ const SidePanel = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [checkModelConfiguration, loadGeneralSettings]);
+  }, [checkModelConfiguration, loadGeneralSettings, loadFavoritePrompts]);
 
   useEffect(() => {
     sessionIdRef.current = currentSessionId;
