@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
 import { FaTrash } from 'react-icons/fa';
-import { BsBookmark } from 'react-icons/bs';
 
 interface ChatSession {
   id: string;
@@ -12,7 +11,6 @@ interface ChatHistoryListProps {
   sessions: ChatSession[];
   onSessionSelect: (sessionId: string) => void;
   onSessionDelete: (sessionId: string) => void;
-  onSessionBookmark: (sessionId: string) => void;
   visible: boolean;
   isDarkMode?: boolean;
 }
@@ -21,7 +19,6 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
   sessions,
   onSessionSelect,
   onSessionDelete,
-  onSessionBookmark,
   visible,
   isDarkMode = false,
 }) => {
@@ -34,10 +31,10 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <h2 className={`mb-4 text-lg font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Chat History</h2>
+      <h2 className={`mb-4 text-lg font-semibold ${isDarkMode ? 'text-gray-200' : 'text-white'}`}>Chat History</h2>
       {sessions.length === 0 ? (
         <div
-          className={`rounded-lg ${isDarkMode ? 'bg-slate-800 text-gray-400' : 'bg-white/30 text-gray-500'} p-4 text-center backdrop-blur-sm`}>
+          className={`rounded-lg ${isDarkMode ? 'bg-slate-800 text-gray-400' : 'bg-white/30 text-white'} p-4 text-center backdrop-blur-sm`}>
           No chat history available
         </div>
       ) : (
@@ -49,31 +46,13 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                 isDarkMode ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white/50 hover:bg-white/70'
               } p-3 backdrop-blur-sm transition-all`}>
               <button onClick={() => onSessionSelect(session.id)} className="w-full text-left" type="button">
-                <h3 className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                <h3 className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-white'}`}>
                   {session.title}
                 </h3>
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-white'}`}>
                   {formatDate(session.createdAt)}
                 </p>
               </button>
-
-              {/* Bookmark button - top right */}
-              {onSessionBookmark && (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    onSessionBookmark(session.id);
-                  }}
-                  className={`absolute right-2 top-2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
-                    isDarkMode
-                      ? 'bg-slate-700 text-[#58A0C8] hover:bg-slate-600'
-                      : 'bg-white text-[#58A0C8] hover:bg-gray-100'
-                  }`}
-                  aria-label="Bookmark session"
-                  type="button">
-                  <BsBookmark size={14} />
-                </button>
-              )}
 
               {/* Delete button - bottom right */}
               <button

@@ -26,16 +26,16 @@ code {
 }
 
 ::-webkit-scrollbar-track {
-  background: #fdf2f8;
+  background: #e7ecf3;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FDF5AA;
+  background: #8b95a0;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #FDF5AA;
+  border: 00.5px solid #032259;
 }
 
 /* Used classes from the component */
@@ -100,16 +100,16 @@ code {
 }
 
 .scrollbar-gutter-stable::-webkit-scrollbar-track {
-  background: #fdf2f8;  /* pink-50 */
+  background: #e7ecf3;  /* dark blue */
 }
 
 .scrollbar-gutter-stable::-webkit-scrollbar-thumb {
-  background: #FDF5AA;
+  background: #8b95a0;
   border-radius: 4px;
 }
 
 .scrollbar-gutter-stable::-webkit-scrollbar-thumb:hover {
-  background: #FDF5AA;
+  border: 00.5px solid #032259;
 }
 
 /* Dark mode text and background colors */

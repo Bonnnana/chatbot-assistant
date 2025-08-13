@@ -732,53 +732,11 @@ const SidePanel = () => {
     }
   };
 
-  const handleSessionBookmark = async (sessionId: string) => {
-    try {
-      const fullSession = await chatHistoryStore.getSession(sessionId);
-
-      if (fullSession && fullSession.messages.length > 0) {
-        // Get the session title
-        const sessionTitle = fullSession.title;
-        // Get the first 8 words of the title
-        const title = sessionTitle.split(' ').slice(0, 8).join(' ');
-
-        // Get the first message content (the task)
-        const taskContent = fullSession.messages[0]?.content || '';
-
-        // Add to favorites storage
-        await favoritesStorage.addPrompt(title, taskContent);
-
-        // Update favorites in the UI
-        const prompts = await favoritesStorage.getAllPrompts();
-        setFavoritePrompts(prompts);
-
-        // Return to chat view after pinning
-        handleBackToChat(true);
-      }
-    } catch (error) {
-      console.error('Failed to pin session to favorites:', error);
-    }
-  };
-
   const handleBookmarkSelect = (content: string) => {
     if (setInputTextRef.current) {
       setInputTextRef.current(content);
     }
   };
-
-  // Load favorite prompts from storage
-  useEffect(() => {
-    const loadFavorites = async () => {
-      try {
-        const prompts = await favoritesStorage.getAllPrompts();
-        setFavoritePrompts(prompts);
-      } catch (error) {
-        console.error('Failed to load favorite prompts:', error);
-      }
-    };
-
-    loadFavorites();
-  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1030,7 +988,6 @@ const SidePanel = () => {
               sessions={chatSessions}
               onSessionSelect={handleSessionSelect}
               onSessionDelete={handleSessionDelete}
-              onSessionBookmark={handleSessionBookmark}
               visible={true}
               isDarkMode={isDarkMode}
             />
@@ -1111,7 +1068,7 @@ const SidePanel = () => {
                 )}
                 {messages.length > 0 && (
                   <div
-                    className={`border-t ${isDarkMode ? 'border-sky-900' : 'border-sky-100'} p-2 shadow-sm backdrop-blur-sm`}>
+                    className={`border-t ${isDarkMode ? 'bg-[#1e293b]' : 'border-sky-100'} p-2 shadow-sm backdrop-blur-sm`}>
                     <ChatInput
                       onSendMessage={handleSendMessage}
                       onStopTask={handleStopTask}
