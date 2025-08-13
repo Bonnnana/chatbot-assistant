@@ -33,11 +33,7 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: find the navigator's DONE action result in the "Action result" section above and use that exact message as your answer. The navigator should have provided the consultation dates and pagination information in their DONE action message.
-7. If there are multiple similar dropdown options, you should respond with:
-  - is_valid: true
-  - reason: describe the reason why it is valid although the task is not completed yet
-  - answer: ask the user to specify which option they want from the available choices
-8. If the output is correct and the task is completed, you should respond with 
+7. If the output is correct and the task is completed, you should respond with 
   - is_valid: true
   - reason: "Task completed"
   - answer: The final answer to the task

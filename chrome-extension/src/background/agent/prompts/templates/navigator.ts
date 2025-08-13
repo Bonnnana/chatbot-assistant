@@ -223,73 +223,13 @@ Common action sequences:
          - Filter assignments and surveys by date periods
          - Show upcoming deadlines within specified timeframes
 
-15. Conditional Logic and Verification Steps:
-
-- **CRITICAL**: Always verify the current state before proceeding with actions that depend on specific conditions
-- **For document selection scenarios** (like iKnow document applications):
-  - Before clicking any "Внеси" (Submit) or similar submission buttons, ALWAYS verify the current state
-  - Check the dropdown label/text to see what document is currently selected:
-    • If dropdown shows "Изберете документ" (or similar default text), DO NOT click the submit button
-    • If dropdown shows a document name, verify it matches what the user requested:
-      - If the selected document matches the user's request, proceed with submission
-      - If the selected document does NOT match the user's request, you need to select the correct document first
-  - Only proceed with submission after confirming the dropdown has been updated with the correct selected document
-  - Look for visual indicators that the selection has been made (changed text, selected state, etc.)
-  - If you cannot verify the correct selection was made, use cache_content to record the current state and stop
-
-- **VERIFICATION REQUIREMENTS FOR DOCUMENT SELECTION**:
-  - **STEP 1**: Always check the current dropdown state before proceeding
-  - **STEP 2**: If dropdown shows default text ("Изберете документ"), you MUST select a document first
-  - **STEP 3**: If dropdown shows a document name, verify it matches the user's request
-  - **STEP 4**: Only after verification that the correct document is selected, proceed with submission
-  - **NEVER SKIP**: Do not skip verification steps even if you think the document might already be selected
-
-- **DROPDOWN SELECTION WORKFLOW**:
-  - **For custom dropdowns** (non-native HTML select elements):
-    1. First click on the dropdown element to open it
-    2. Wait for the dropdown options to appear
-    3. **CHECK FOR MULTIPLE SIMILAR OPTIONS**: Before selecting, check if there are multiple similar options
-    4. **If multiple similar options found**: Check if only one option matches the user's request - if so, select that option automatically. If there are truly multiple similar options that don't clearly indicate which one the user wants, stop and execute DONE action
-    6. Verify the selection was made by checking the dropdown label/text
-  - **For native HTML select elements**:
-    1. **CHECK FOR MULTIPLE SIMILAR OPTIONS**: Before selecting, check if there are multiple similar options
-    2. **If multiple similar options found**: Check if only one option matches the user's request - if so, select that option automatically. If there are truly multiple similar options that don't clearly indicate which one the user wants, stop and ecexute DONE action
-    3. **If single or clearly distinct options**: Use selectDropdownOption action with the most similar document name
-    4. Verify the selection was made
-  - **Always verify**: After any dropdown selection, always verify that the selection was successful before proceeding
-  - **IMPORTANT**: If you see a dropdown that looks like a custom component (not a native <select>), always use the click-to-open approach first
-
-- **For any conditional steps** mentioned in plans or instructions:
-  - Read the full context of conditional statements (e.g., "Only if X, then do Y")
-  - Verify the condition is met before executing the dependent action
-  - If the condition is not met, explain why in your evaluation and wait for the condition to be satisfied
-  - Do not blindly execute actions without checking prerequisites
-
-- **Verification before submission**:
-  - Always check form state before clicking submit buttons
-  - Verify required fields are filled
-  - Confirm dropdowns have valid selections (not default/placeholder values)
-  - Ensure the selected values match what the user requested
-  - Look for visual feedback that selections have been made
-  - **CRITICAL**: For document selection, always verify the dropdown shows the correct document name before clicking submit
 
 15. Plan:
 
 - Plan is a json string wrapped by the <plan> tag
 - If a plan is provided, follow the instructions in the next_steps exactly first
 - If no plan is provided, just continue with the task
-- **IMPORTANT**: When following plan steps, pay special attention to conditional logic and verification requirements
-- Do not execute steps that depend on conditions that haven't been met yet
-- Always verify the current state before proceeding with conditional actions
-- **CRITICAL FOR DOCUMENT SELECTION**: If the plan includes verification steps (like "VERIFY DROPDOWN STATE" or "VERIFY SELECTION"), these steps MUST be executed before proceeding
-- **NEVER SKIP VERIFICATION**: Do not skip verification steps even if you think the condition might already be met
-- **FOLLOW ORDER**: Always follow the steps in the exact order provided in the plan
-- **DROPDOWN WORKFLOW**: For dropdown selection, always:
-  1. First try clicking on the dropdown to open it (for custom dropdowns)
-  2. Wait for options to appear
-  3. Click on the desired option
-  4. Verify the selection was made
-  5. Only use selectDropdownOption action if you're certain it's a native HTML <select> element
+
 </system_instructions>
 
 `;
