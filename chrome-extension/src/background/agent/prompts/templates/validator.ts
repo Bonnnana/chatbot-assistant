@@ -29,10 +29,10 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: ask the user to input the name and surname of the wanted professor by themselves
-6. If the task is to specify the date of the consultation, you should respond with:
+6. If the task is to specify which consultation date/time they prefer (multiple consultation slots found), you should respond with:
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
-  - answer: ask the user to input the date of the wanted consultation by themselves
+  - answer: find the navigator's DONE action result in the "Action result" section above and use that exact message as your answer. The navigator should have provided the consultation dates and pagination information in their DONE action message.
 7. If there are multiple similar dropdown options, you should respond with:
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet

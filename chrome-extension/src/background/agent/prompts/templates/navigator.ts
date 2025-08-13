@@ -134,21 +134,37 @@ Common action sequences:
 
 - IF there are 2 OR MORE 'Пријави се' buttons visible:
   1. STOP immediately - do NOT click anything
-  2. Check the original user request for EXPLICIT date/time specification
-  3. ONLY proceed if user request contains:
+  2. Scroll to the bottom of the page to check for pagination elements (Next, Previous, page numbers, "Следна", etc.) that might be hidden at the bottom
+  3. Extract the dates and times of the visible consultation slots (especially the two nearest dates)
+  4. Look for professor name in the consultation slot information (usually displayed near the dates)
+  5. Check the original user request for EXPLICIT date/time specification
+  6. ONLY proceed if user request contains:
      - Exact dates: "December 15", "Monday", "tomorrow", "15.12.2024"
      - Exact times: "10:00", "morning", "afternoon" 
      - Priority keywords: "earliest", "latest", "first available", "most recent", "soonest", "најрано", "најдоцна"
-  4. IF NO explicit date/time/priority found in user request:
+  7. IF NO explicit date/time/priority found in user request:
      - Execute DONE action immediately
      - Set success to false
-     - Message: "Multiple consultation slots are available. Please specify which date and time you prefer."
+     - If pagination is detected (multiple pages exist):
+       - Message: "Please specify which date and time you prefer for the consultation with Prof. [Name]: [List the two nearest dates with times]. There are more consultation slots available on additional pages."
+     - If no pagination detected (only current page):
+       - Message: "Please specify which date and time you prefer for the consultation with Prof. [Name]: [List all available dates with times]."
      - DO NOT click any buttons or links
 
 - IF there is only 1 consultation slot visible:
   - Proceed to click the consultation button normally
 
 - CRITICAL: The word "закажи" (schedule) or "consultation" alone does NOT count as date/time specification.
+
+- EXTRACTION GUIDELINES:
+  - When extracting consultation slot information, look for:
+    - Date formats: "2025-08-14", "14.08.2025", "Thursday", "Thursday, August 14"
+    - Time formats: "10:00", "10:00-12:00", "10:00 to 12:00"
+    - Professor names: Usually displayed near the consultation slot information
+    - Pagination indicators: "Next", "Следна", ">", "»", page numbers, etc.
+  - Always extract the two nearest dates when multiple slots are available
+  - Include both date and time information in the message
+  - If professor name is visible, include it in the message
 
 - This rule applies EVERY TIME before clicking consultation-related elements, regardless of previous actions.
 
