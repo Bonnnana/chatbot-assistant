@@ -37,6 +37,17 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: "Task completed"
   - answer: The final answer to the task
+8. If the task involves document submission in iKnow system:
+  - Check if a document was properly selected before submission
+  - Verify the dropdown text changed from "Изберете документ" to actual document name
+  - If submission was attempted without document selection:
+    - is_valid: false
+    - reason: "Document selection failed before submission attempt"
+    - answer: "Please ensure a document is selected from the dropdown before clicking 'Внеси'"
+  - If document was properly selected and submission successful:
+    - Set is_valid to true
+    - reason: "Document selected and submitted successfully"
+    - answer: "Document request submitted successfully. The request should appear in your requests list."
 
 
 # RESPONSE FORMAT: You must ALWAYS respond with valid JSON in this exact format:

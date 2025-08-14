@@ -86,33 +86,27 @@ export const plannerSystemPromptTemplate = `You are a helpful assistant. You are
 
           1. Click the **"Документи"** tab from the top navigation.
 
-          2. **Check the text of the dropdown element** (button or selector). If the label still says **"Изберете документ"**, do not continue:
-              - Do not click "Внеси".
-              - Do not attempt any submission.
-              - You must first select a valid document.
-              - Any action that results in the error message **"Грешка – Изберете документ"** is considered a critical failure and must be avoided.
-
-          3. Click the **"Изберете документ"** dropdown and search the document that best matches the user's input, and after finding it click the document name from the dropdown.
+          2. **CRITICAL: Focus ONLY on the form above the table**
+              - **IGNORE the existing document requests table below**
+              - **NEVER check if the document already exists in the table**
+              - **ALWAYS proceed with requesting a new document regardless of table content**
+              - Students can request the same document multiple times in short intervals
+              
+          3. Click the **"Изберете документ"** dropdown or selector and find the document that best matches the user's input, and after finding it select that option.
               - Match based on name or meaning (e.g. "Уверение за редовен студент", "УППИ образец", etc.).
               - If the match is unclear or not found, stop and wait for clarification.
+              - **If the dropdown already shows a previously selected document**, compare it to the newest user request:
+                - If it does NOT match the current requested document, **open the dropdown and select the correct option**.
+              - **VERIFY the dropdown text has changed** to exactly the requested document option text (not just any value)
+              - **ONLY proceed to step 4 if the dropdown shows the correct selected document name**
 
-          4. (Optional) Fill in the **"Коментар"** field only if the user explicitly provided a comment.
+          4. **Only if text in the dropdown button is no longer the "Изберете документ"**, proceed to click the **"Внеси"** button to submit the request.
 
-          5. **Only if the selected document is no longer the default ("Изберете документ")**, proceed to click the **"Внеси"** button to submit the request.
+
+          5. (Optional) Fill in the **"Коментар"** field only if the user explicitly provided a comment.
 
           6. Confirm the request was successful by verifying that the new entry appears **at the top of the table** in the **"Барање"** column.
-        - If the user's input expresses intent to access academic records, grades, or subject data using iKnow (even if the word "iknow" is not directly mentioned), including phrases like:
-        - "which subjects I have this semester"
-        - "what's my average grade"
-        - "who is the professor for [subject]"
-        - "all subjects I have"
-        - "grade for [subject]"
-        - "subject code for [subject]"
-        - or any equivalent phrasing in Macedonian (e.g., "кој предмети ги имам", "просекот ми е", "професор по", "оценка", "шифра на предмет")
-      - Then:
-        - Navigate to: [https://www.iknow.ukim.mk/](https://www.iknow.ukim.mk/)
-        - Do not assume or fabricate academic data
-        - Wait for the user to log in and explore the system unless they explicitly ask for specific help navigating to these features
+        
     4. If the user's input expresses intent to access academic records, grades, or subject data using iKnow (even if the word "iknow" is not directly mentioned), including phrases like:
         - "which subjects I have this semester"
         - "what's my average grade"
@@ -122,7 +116,7 @@ export const plannerSystemPromptTemplate = `You are a helpful assistant. You are
         - "subject code for [subject]"
         - or any equivalent phrasing in Macedonian (e.g., "кој предмети ги имам", "просекот ми е", "професор по", "оценка", "шифра на предмет")
       - Then:
-        - Navigate to: [https://cas.finki.ukim.mk/cas/login?service=https://is.iknow.ukim.mk/account/logincas](https://cas.finki.ukim.mk/cas/login?service=https://is.iknow.ukim.mk/account/logincas)
+        - Navigate to: [https://www.iknow.ukim.mk/](https://www.iknow.ukim.mk/)
         - Do not assume or fabricate academic data
         - Wait for the user to log in and explore the system unless they explicitly ask for specific help navigating to these features
 
