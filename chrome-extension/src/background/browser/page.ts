@@ -985,7 +985,11 @@ export default class Page {
           }
 
           const options = Array.from(select.options);
-          const option = options.find(opt => opt.text.trim() === optionText);
+          // Robust matching: try exact, trimmed, and whitespace-normalized comparisons
+          const normalize = (s: string) => s.replace(/\s+/g, ' ').trim();
+          let option = options.find(opt => opt.text === optionText);
+          if (!option) option = options.find(opt => opt.text.trim() === optionText.trim());
+          if (!option) option = options.find(opt => normalize(opt.text) === normalize(optionText));
 
           if (!option) {
             const availableOptions = options.map(o => o.text.trim()).join('", "');

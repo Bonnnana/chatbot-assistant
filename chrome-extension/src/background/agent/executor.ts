@@ -23,6 +23,7 @@ import { URLNotAllowedError } from '../browser/views';
 import { chatHistoryStore } from '@extension/storage/lib/chat';
 import type { AgentStepHistory } from './history';
 import type { GeneralSettingsConfig } from '@extension/storage';
+import { findFinkiWorkflow, executeFinkiWorkflow } from './actions/finkiWorkflows';
 
 const logger = createLogger('Executor');
 
@@ -57,13 +58,19 @@ export class Executor {
     const validatorLLM = extraArgs?.validatorLLM ?? navigatorLLM;
     const extractorLLM = extraArgs?.extractorLLM ?? navigatorLLM;
     const eventManager = new EventManager();
-    const context = new AgentContext(
-      taskId,
-      browserContext,
-      messageManager,
-      eventManager,
-      extraArgs?.agentOptions ?? {},
-    );
+    // Optimize settings for university tasks
+    const baseOptions = extraArgs?.agentOptions ?? {};
+    const isUniversityTask = this.isUniversityTask(task);
+
+    if (isUniversityTask) {
+      baseOptions.maxActionsPerStep = Math.max(baseOptions.maxActionsPerStep || 5, 20);
+      baseOptions.maxSteps = Math.max(baseOptions.maxSteps || 20, 50); // Increase max steps for university tasks
+      logger.info(
+        `🎯 University task detected - optimizing for speed (maxActionsPerStep: ${baseOptions.maxActionsPerStep}, maxSteps: ${baseOptions.maxSteps})`,
+      );
+    }
+
+    const context = new AgentContext(taskId, browserContext, messageManager, eventManager, baseOptions);
 
     this.generalSettings = extraArgs?.generalSettings;
     this.tasks.push(task);
@@ -132,6 +139,16 @@ export class Executor {
     try {
       this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_START, this.context.taskId);
 
+      // Check for FINKI workflow first - this bypasses the planner entirely
+      const currentTask = this.tasks[this.tasks.length - 1];
+      const finkiWorkflow = findFinkiWorkflow(currentTask);
+
+      if (finkiWorkflow) {
+        logger.info(`🚀 Using FINKI workflow: ${finkiWorkflow.name} - bypassing planner for speed`);
+        // For FINKI tasks, we'll use the navigator with optimized prompts
+        // The navigator will handle the execution with the FINKI-specific rules
+      }
+
       let done = false;
       let step = 0;
       let validatorFailed = false;
@@ -147,8 +164,24 @@ export class Executor {
           break;
         }
 
-        // Run planner if configured
-        if (this.planner && (context.nSteps % context.options.planningInterval === 0 || validatorFailed)) {
+        // Check if this is a FINKI task that should skip planning entirely
+        const currentTask = this.tasks[this.tasks.length - 1];
+        const finkiWorkflow = findFinkiWorkflow(currentTask);
+        const isUniversityTask = this.isUniversityTask(currentTask);
+
+        // For FINKI tasks, NEVER run the planner - let navigator handle everything
+        const shouldPlan =
+          this.planner &&
+          !finkiWorkflow &&
+          (validatorFailed ||
+            (isUniversityTask && context.nSteps === 0) ||
+            (!isUniversityTask && context.nSteps % context.options.planningInterval === 0));
+
+        if (finkiWorkflow) {
+          logger.info(`🚀 FINKI task detected: ${finkiWorkflow.name} - SKIPPING PLANNER entirely`);
+        }
+
+        if (shouldPlan) {
           validatorFailed = false;
           // The first planning step is special, we don't want to add the browser state message to memory
           let positionForPlan = 0;
@@ -191,8 +224,12 @@ export class Executor {
           }
         }
 
-        // execute the navigation step
-        if (!done) {
+        // execute the navigation step (skip for FINKI tasks as they handle their own execution)
+        if (!done && !finkiWorkflow) {
+          done = await this.navigate();
+        } else if (finkiWorkflow) {
+          // For FINKI tasks, let the navigator handle everything
+          logger.info(`🚀 FINKI task: letting navigator handle execution directly`);
           done = await this.navigate();
         }
 
@@ -402,5 +439,32 @@ export class Executor {
     }
 
     return results;
+  }
+
+  private isUniversityTask(task: string): boolean {
+    const lowerTask = task.toLowerCase();
+    return (
+      lowerTask.includes('consultation') ||
+      lowerTask.includes('konsultacii') ||
+      lowerTask.includes('консултации') ||
+      lowerTask.includes('document') ||
+      lowerTask.includes('документ') ||
+      lowerTask.includes('certificate') ||
+      lowerTask.includes('потврда') ||
+      lowerTask.includes('uverenie') ||
+      lowerTask.includes('уверение') ||
+      lowerTask.includes('baranje') ||
+      lowerTask.includes('барање') ||
+      lowerTask.includes('download') ||
+      lowerTask.includes('преземи') ||
+      lowerTask.includes('земи') ||
+      lowerTask.includes('подигни') ||
+      lowerTask.includes('iknow') ||
+      lowerTask.includes('икноу') ||
+      lowerTask.includes('course') ||
+      lowerTask.includes('курс') ||
+      lowerTask.includes('assignment') ||
+      lowerTask.includes('задавање')
+    );
   }
 }

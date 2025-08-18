@@ -33,6 +33,10 @@ ${commonSecurityRules}
   - is_valid: true
   - reason: describe the reason why it is valid although the task is not completed yet
   - answer: find the navigator's DONE action result in the "Action result" section above and use that exact message as your answer. The navigator should have provided the consultation dates and pagination information in their DONE action message.
+7. If the user explicitly asks for the nearest/earliest/soonest/first available consultation slot and the navigator selected and booked the earliest visible slot, you should respond with:
+  - is_valid: true
+  - reason: "User requested earliest slot and the earliest available slot was selected and booked"
+  - answer: concise confirmation including selected date/time
 7. If the output is correct and the task is completed, you should respond with 
   - is_valid: true
   - reason: "Task completed"

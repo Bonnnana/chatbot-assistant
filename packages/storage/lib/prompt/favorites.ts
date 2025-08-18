@@ -158,7 +158,7 @@ export function createFavoritesStorage(): FavoritePromptsStorage {
         const newState = await favoritesStorage.get();
         prompts = newState.prompts;
       }
-      return [...prompts].sort((a, b) => b.id - a.id);
+      return prompts;
     },
 
     getPromptById: async (id: number): Promise<FavoritePrompt | undefined> => {
