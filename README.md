@@ -16,7 +16,7 @@ It is specialized for **FINKI Faculty services** with flexible LLM options and a
 - **Conversation History**: Manage interaction history easily.  
 
 #### 🎓 Consultation Booking 
-- Automatic navigation to the correct consultations page: [https://consultations.finki.ukim.mk/](https://consultations.finki.ukim.mk/)  
+- Automatic navigation to the consultations page: [https://consultations.finki.ukim.mk/](https://consultations.finki.ukim.mk/)  
 - Book consultations directly with a **named professor** (e.g., *"Schedule a consultation with Prof. Trajanov"*)  
 - Lets you **ask questions about consultations**, such as:  
   - *"What are my scheduled consultations?"*  
@@ -24,15 +24,15 @@ It is specialized for **FINKI Faculty services** with flexible LLM options and a
 - If multiple professors or slots are found, it will **ask you to choose** 
 
 #### 📑 iKnow
-- Automatic navigation to the correct iKnow page: [https://www.iknow.ukim.mk/](https://www.iknow.ukim.mk/)  
+- Automatic navigation to the iKnow page: [https://www.iknow.ukim.mk/](https://www.iknow.ukim.mk/)  
 - Handles **document request flow**
 - Lets you **ask questions about personal informations for the student**
 - Lets you **ask questions about average grade, passed exams etc...**
 
 #### 📚 Courses & Assignments 
-- Automatic navigation to the correct iKnow page: [https://www.courses.finki.ukim.mk/](https://www.courses.finki.ukim.mk)  
+- Automatic navigation to the iKnow page: [https://www.courses.finki.ukim.mk/](https://www.courses.finki.ukim.mk)  
 - Smart course search by **subject name or abbreviation** 
-- Extracts **deadlines, homework, surveys, and exams** directly from course calendars  
+- Extracts **deadlines, homework and surveys** directly from course calendars  
 - Supports **date-based queries** like:  
   - *"Show all homework for this month"*  
   - *"Are there any surveys for next month?"*
@@ -71,16 +71,18 @@ It is specialized for **FINKI Faculty services** with flexible LLM options and a
     * Add your LLM API keys.
     * Choose which model to use for different agents (Navigator, Planner, Validator)
 
-> **Note**: In this project we have used OpenAI API key, model: gpt 4.1-mini had best performance for all 3 agents.
+
+> **Note**: In this project we have used OpenAI API key, specifically model: gpt 4.1-mini had best performance for all 3 agents both in English and Macedonian user prompts.
+
 
 ## 🔄 Keeping FINKI AI Assistant Updated with Nanobrowser
 
 FINKI AI Assistant is built on top of [Nanobrowser](https://github.com/nanobrowser/nanobrowser).  
-To stay up to date with the latest Nanobrowser improvements **while keeping our custom FINKI workflows and prompt design**, we maintain a clean link to the upstream repository.
+To stay up to date with the latest Nanobrowser improvements **while keeping our custom FINKI workflows and prompt design**, maintain a clean link to the upstream repository.
 
-### 🌐 Remote Setup
+### Remote Setup
 
-In our Git workflow, we use **two remotes**:
+Use **two remotes**:
 
 - **origin** → our repository (FINKI AI Assistant)  
 - **upstream** → the official Nanobrowser repository (read-only, fetch only)
@@ -95,10 +97,10 @@ git remote add upstream https://github.com/nanobrowser/nanobrowser.git
 git remote -v
 # origin    https://github.com/Bonnnana/chatbot-assistant.git (our repo)
 # upstream  https://github.com/nanobrowser/nanobrowser.git     (Nanobrowser official)
-
+```
 ---
 
-## Fetch Latest Changes from Upstream
+### Fetch Latest Changes from Upstream
 
 Download the latest commits from the upstream repository without modifying your local files:
 
@@ -113,18 +115,14 @@ This command:
 
 ---
 
-## Update Your Local Main Branch
+### Update Your Local Main Branch
 
 Switch to your main branch and apply the upstream changes.
-
-###  Rebase
 
 ```bash
 git checkout main
 git rebase upstream/main
 ```
-
-## Push Updates to Your Repository
 
 After updating your local branch, push the changes to your forked repository:
 
@@ -138,7 +136,7 @@ git push --force-with-lease origin main
 
 ---
 
-## Handling Conflicts
+### Handling Conflicts
 
 If you encounter merge conflicts during rebase:
 
