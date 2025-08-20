@@ -10,8 +10,6 @@ export interface FinkiWorkflow {
   extractParams?: (userInput: string) => Record<string, string>;
 }
 
-// Map common Macedonian/English keywords to the EXACT iKnow dropdown option text
-// Use exact spacing and parentheses so selection works reliably
 const IKNOW_DOCUMENT_KEYWORD_MAP: Array<{ keywords: string[]; option: string }> = [
   {
     keywords: [
@@ -124,7 +122,6 @@ function mapUserInputToIknowDocumentOption(userInput: string): string {
       }
     }
   }
-  // default to student certificate of enrollment
   return 'Уверение за редовен студент - ФИНКИ ( 0)';
 }
 
@@ -162,10 +159,10 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       {
         type: 'click_element',
         parameters: {
-          index: 0, // Will be updated by navigator to find login button
+          index: 0,
           intent: 'Click login button',
         },
-        description: 'Click login button',
+        description: 'Click "Најави се" button',
       },
       {
         type: 'wait',
@@ -175,7 +172,7 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       {
         type: 'input_text',
         parameters: {
-          index: 0, // Will be updated by navigator to find search field
+          index: 0,
           text: 'Trajanov',
           intent: 'Search for professor Trajanov',
         },
@@ -189,7 +186,7 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       {
         type: 'click_element',
         parameters: {
-          index: 0, // Will be updated by navigator to find professor result
+          index: 0,
           intent: 'Click on professor result',
         },
         description: 'Click on professor result',
@@ -202,7 +199,7 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       {
         type: 'click_element',
         parameters: {
-          index: 0, // Will be updated by navigator to find consultation link
+          index: 0,
           intent: 'Click consultations link',
         },
         description: 'Click consultations link',
@@ -215,7 +212,7 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       {
         type: 'click_element',
         parameters: {
-          index: 0, // Will be updated by navigator to find booking button
+          index: 0,
           intent: 'Book consultation',
         },
         description: 'Book consultation',
@@ -239,17 +236,14 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
     ],
     extractParams: (userInput: string) => {
       const lower = userInput.toLowerCase();
-      // document type
       const isUverenie = /(uverenie|уверение)/i.test(userInput);
       const isPotvrda = /(potvrda|потврда)/i.test(userInput);
       const document_type = isPotvrda ? 'Потврда' : isUverenie ? 'Уверение' : 'Уверение';
 
-      // language
       let language = 'Македонски';
       if (/(english|англиски|en)\b/i.test(userInput)) language = 'English';
       if (/(македонски|mk)\b/i.test(userInput)) language = 'Македонски';
 
-      // purpose (after 'for' or 'за')
       let purpose = '';
       const purposeMatch = lower.match(/(?:for|за)\s+([^,.!?\n]+)/i);
       if (purposeMatch) {
@@ -375,24 +369,19 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       'закажи документ',
       'baranje za dokument',
       'барање за документ',
-      // student certificate
       'certificate of enrollment',
       'enrollment certificate',
       'student certificate',
       'потврда за редовен',
       'уверение за редовен',
       'uverenie',
-      // diploma supplement
       'diploma supplement',
       'додаток на диплома',
-      // transcript
       'transcript',
       'grades certificate',
       'уверение за положени испити',
-      // recognition
       'recognition',
       'признавање на положени испити',
-      // admin requests
       'retroactive semester',
       'ретроактивен семестар',
       'late exam registration',
@@ -413,7 +402,6 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       'пакет за дипломирање',
       'cancel diploma topic',
       'откажување тема дипломска',
-      // other
       'student record card',
       'студентски картон',
       'uppi',
@@ -526,7 +514,6 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
     patterns: [
       'course',
       'курс',
-      // assignments/homework
       'assignment',
       'assignments',
       'задавање',
@@ -535,14 +522,12 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       'homework',
       'tasks',
       'задачи',
-      // surveys (mk/en + common latin typo)
       'survey',
       'surveys',
       'анкета',
       'анкети',
       'anketi',
       'анкeти',
-      // announcements/news
       'announcement',
       'announcements',
       'најава',
@@ -551,10 +536,8 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       'известувања',
       'соопштение',
       'соопштенија',
-      // materials
       'materials',
       'материјали',
-      // time phrases to trigger calendar flow
       'this month',
       'next month',
       'овај месец',
@@ -562,7 +545,6 @@ export const FINKI_WORKFLOWS: FinkiWorkflow[] = [
       'следниот месец',
       'следен месец',
       'идниот месец',
-      // months (mk/en)
       'january',
       'february',
       'march',
@@ -643,7 +625,6 @@ export function executeFinkiWorkflow(workflow: FinkiWorkflow, userInput: string,
     const actionName = action.type;
     const actionParams = { ...action.parameters };
 
-    // Replace placeholders with actual values
     Object.keys(params).forEach(key => {
       const placeholder = `{${key}}`;
       Object.keys(actionParams).forEach(paramKey => {
