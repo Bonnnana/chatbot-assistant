@@ -60,6 +60,7 @@ export class CachedStateClickableElementsHashes {
 
 export default class Page {
   private _tabId: number;
+  private _browserContext?: any; // Reference to browser context for task ID
   private _browser: Browser | null = null;
   private _puppeteerPage: PuppeteerPage | null = null;
   private _config: BrowserContextConfig;
@@ -84,6 +85,10 @@ export default class Page {
 
   get tabId(): number {
     return this._tabId;
+  }
+
+  public setBrowserContext(browserContext: any): void {
+    this._browserContext = browserContext;
   }
 
   get validWebPage(): boolean {
@@ -116,6 +121,9 @@ export default class Page {
 
     // Add anti-detection scripts
     await this._addAntiDetectionScripts();
+
+    // Set up persistent network monitoring
+    this._setupNetworkMonitoring();
 
     return true;
   }
@@ -1399,7 +1407,16 @@ export default class Page {
       throw new Error('Puppeteer page is not connected');
     }
 
-    const RELEVANT_RESOURCE_TYPES = new Set(['document', 'stylesheet', 'image', 'font', 'script', 'iframe']);
+    const RELEVANT_RESOURCE_TYPES = new Set([
+      'document',
+      'stylesheet',
+      'image',
+      'font',
+      'script',
+      'iframe',
+      'xhr',
+      'fetch',
+    ]);
 
     const RELEVANT_CONTENT_TYPES = new Set([
       'text/html',
@@ -1408,6 +1425,10 @@ export default class Page {
       'image/',
       'font/',
       'application/json',
+      'application/xml',
+      'text/xml',
+      'application/x-www-form-urlencoded',
+      'multipart/form-data',
     ]);
 
     const IGNORED_URL_PATTERNS = new Set([
@@ -1455,6 +1476,9 @@ export default class Page {
     const onRequest = (request: HTTPRequest) => {
       // Filter by resource type
       const resourceType = request.resourceType();
+      const method = request.method();
+      const url = request.url();
+
       if (!RELEVANT_RESOURCE_TYPES.has(resourceType)) {
         return;
       }
@@ -1465,8 +1489,8 @@ export default class Page {
       }
 
       // Filter out by URL patterns
-      const url = request.url().toLowerCase();
-      if (Array.from(IGNORED_URL_PATTERNS).some(pattern => url.includes(pattern))) {
+      const lowerUrl = url.toLowerCase();
+      if (Array.from(IGNORED_URL_PATTERNS).some(pattern => lowerUrl.includes(pattern))) {
         return;
       }
 
@@ -1488,10 +1512,14 @@ export default class Page {
 
       pendingRequests.add(request);
       lastActivity = Date.now();
+
+      // Record network request for MCP if monitoring is active
+      this.recordNetworkRequestForMCP(request);
     };
 
     const onResponse = (response: HTTPResponse) => {
       const request = response.request();
+
       if (!pendingRequests.has(request)) {
         return;
       }
@@ -1525,6 +1553,9 @@ export default class Page {
 
       pendingRequests.delete(request);
       lastActivity = Date.now();
+
+      // Record network response for MCP if monitoring is active
+      this.recordNetworkResponseForMCP(response);
     };
 
     // Add event listeners
@@ -1560,6 +1591,166 @@ export default class Page {
       this._puppeteerPage.off('response', onResponse);
     }
     console.debug(`Network stabilized for ${this._config.waitForNetworkIdlePageLoadTime} seconds`);
+  }
+
+  /**
+   * Record network request for MCP monitoring
+   */
+  private async recordNetworkRequestForMCP(request: HTTPRequest): Promise<void> {
+    try {
+      // Import MCPServer dynamically to avoid circular dependencies
+      const { MCPServer } = await import('../mcp/server');
+
+      // Get the current task ID from the browser context
+      const taskId = this._browserContext?.getCurrentTaskId() || this._tabId.toString();
+
+      // Record the network request
+      MCPServer.recordNetworkRequest(taskId, {
+        url: request.url(),
+        method: request.method(),
+        headers: request.headers(),
+        body: request.postData(),
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      // Silently ignore errors to avoid breaking normal functionality
+      console.debug('Failed to record network request for MCP:', error);
+    }
+  }
+
+  /**
+   * Set up persistent network monitoring
+   */
+  private _setupNetworkMonitoring(): void {
+    if (!this._puppeteerPage) {
+      return;
+    }
+
+    const RELEVANT_RESOURCE_TYPES = new Set([
+      'document',
+      'stylesheet',
+      'image',
+      'font',
+      'script',
+      'iframe',
+      'xhr',
+      'fetch',
+    ]);
+
+    const IGNORED_URL_PATTERNS = new Set([
+      // Analytics and tracking
+      'analytics',
+      'tracking',
+      'telemetry',
+      'beacon',
+      'metrics',
+      // Ad-related
+      'doubleclick',
+      'adsystem',
+      'adserver',
+      'advertising',
+      // Social media widgets
+      'facebook.com/plugins',
+      'platform.twitter',
+      'linkedin.com/embed',
+      // Live chat and support
+      'livechat',
+      'zendesk',
+      'intercom',
+      'crisp.chat',
+      'hotjar',
+      // Push notifications
+      'push-notifications',
+      'onesignal',
+      'pushwoosh',
+      // Background sync/heartbeat
+      'heartbeat',
+      'ping',
+      'alive',
+      // WebRTC and streaming
+      'webrtc',
+      'rtmp://',
+      'wss://',
+      // Common CDNs
+      'cloudfront.net',
+      'fastly.net',
+    ]);
+
+    const onRequest = (request: HTTPRequest) => {
+      // Filter by resource type
+      const resourceType = request.resourceType();
+      const method = request.method();
+      const url = request.url();
+
+      if (!RELEVANT_RESOURCE_TYPES.has(resourceType)) {
+        return;
+      }
+
+      // Filter out streaming, websocket, and other real-time requests
+      if (['websocket', 'media', 'eventsource', 'manifest', 'other'].includes(resourceType)) {
+        return;
+      }
+
+      // Filter out by URL patterns
+      const lowerUrl = url.toLowerCase();
+      if (Array.from(IGNORED_URL_PATTERNS).some(pattern => lowerUrl.includes(pattern))) {
+        return;
+      }
+
+      // Filter out data URLs and blob URLs
+      if (url.startsWith('data:') || url.startsWith('blob:')) {
+        return;
+      }
+
+      // Filter out requests with certain headers
+      const headers = request.headers();
+      if (
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+        headers['purpose'] === 'prefetch' ||
+        headers['sec-fetch-dest'] === 'video' ||
+        headers['sec-fetch-dest'] === 'audio'
+      ) {
+        return;
+      }
+
+      // Record network request for MCP if monitoring is active
+      this.recordNetworkRequestForMCP(request);
+    };
+
+    const onResponse = (response: HTTPResponse) => {
+      const request = response.request();
+
+      // Record network response for MCP if monitoring is active
+      this.recordNetworkResponseForMCP(response);
+    };
+
+    // Add event listeners for persistent monitoring
+    this._puppeteerPage.on('request', onRequest);
+    this._puppeteerPage.on('response', onResponse);
+  }
+
+  /**
+   * Record network response for MCP monitoring
+   */
+  private async recordNetworkResponseForMCP(response: HTTPResponse): Promise<void> {
+    try {
+      // Import MCPServer dynamically to avoid circular dependencies
+      const { MCPServer } = await import('../mcp/server');
+
+      // Get the current task ID from the browser context
+      const taskId = this._browserContext?.getCurrentTaskId() || this._tabId.toString();
+
+      // Record the network response
+      MCPServer.recordNetworkResponse(taskId, {
+        status: response.status(),
+        headers: response.headers(),
+        data: null, // We don't capture response data to avoid memory issues
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      // Silently ignore errors to avoid breaking normal functionality
+      console.debug('Failed to record network response for MCP:', error);
+    }
   }
 
   async waitForPageAndFramesLoad(timeoutOverwrite?: number): Promise<void> {

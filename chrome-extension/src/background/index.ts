@@ -14,6 +14,8 @@ import { createChatModel } from './agent/helper';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { DEFAULT_AGENT_OPTIONS } from './agent/types';
 import { SpeechToTextService } from './services/speechToText';
+import { MCPServer } from './mcp';
+import { getClickableElements } from './browser/dom/clickable/service';
 
 const logger = createLogger('background');
 
@@ -135,13 +137,83 @@ chrome.tabs.onRemoved.addListener(tabId => {
 logger.info('background loaded');
 
 // Listen for simple messages (e.g., from options page)
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'THEME_CHANGE') {
-    updateExtensionIcon(message.isDarkMode);
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  try {
+    switch (message.type) {
+      case 'THEME_CHANGE':
+        updateExtensionIcon(message.isDarkMode);
+        sendResponse({ success: true });
+        break;
+
+      case 'mcp_stats':
+        try {
+          const stats = await MCPServer.getLearningStats();
+          sendResponse({ success: true, stats });
+        } catch (error) {
+          logger.error('Failed to get MCP stats:', error);
+          sendResponse({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get MCP stats',
+          });
+        }
+        break;
+
+      case 'mcp_clear_actions':
+        try {
+          await MCPServer.clearLearnedApiActions();
+          sendResponse({ success: true, msg: 'All learned API actions cleared' });
+        } catch (error) {
+          logger.error('Failed to clear MCP API actions:', error);
+          sendResponse({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to clear MCP API actions',
+          });
+        }
+        break;
+
+      case 'mcp_get_actions':
+        try {
+          const actions = await MCPServer.getAllLearnedApiActions();
+          sendResponse({ success: true, actions });
+        } catch (error) {
+          logger.error('Failed to get MCP API actions:', error);
+          sendResponse({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get MCP API actions',
+          });
+        }
+        break;
+
+      case 'mcp_delete_action':
+        if (!message.actionId) {
+          sendResponse({ success: false, error: 'No action ID provided' });
+          break;
+        }
+        try {
+          await MCPServer.deleteLearnedApiAction(message.actionId);
+          sendResponse({ success: true, msg: 'API action deleted successfully' });
+        } catch (error) {
+          logger.error('Failed to delete MCP API action:', error);
+          sendResponse({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to delete MCP API action',
+          });
+        }
+        break;
+
+      default:
+        sendResponse({ success: false, error: 'Unknown message type' });
+    }
+  } catch (error) {
+    logger.error('Error handling runtime message:', error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
-  // Handle other message types if needed in the future
-  // Return false if response is not sent asynchronously
-  // return false;
+
+  // Return true to indicate we will send a response asynchronously
+  return true;
 });
 
 // Setup connection listener for long-lived connections (e.g., side panel)
@@ -303,6 +375,179 @@ chrome.runtime.onConnect.addListener(port => {
               });
             }
             break;
+          }
+
+          case 'mcp_stats': {
+            try {
+              const stats = await MCPServer.getLearningStats();
+              return port.postMessage({ type: 'mcp_stats', stats });
+            } catch (error) {
+              logger.error('Failed to get MCP stats:', error);
+              return port.postMessage({
+                type: 'error',
+                error: error instanceof Error ? error.message : 'Failed to get MCP stats',
+              });
+            }
+          }
+
+          case 'mcp_clear_actions': {
+            try {
+              await MCPServer.clearLearnedApiActions();
+              return port.postMessage({ type: 'success', msg: 'All learned API actions cleared' });
+            } catch (error) {
+              logger.error('Failed to clear MCP API actions:', error);
+              return port.postMessage({
+                type: 'error',
+                error: error instanceof Error ? error.message : 'Failed to clear MCP API actions',
+              });
+            }
+          }
+
+          case 'mcp_get_actions': {
+            try {
+              const actions = await MCPServer.getAllLearnedApiActions();
+              return port.postMessage({ type: 'mcp_actions', actions });
+            } catch (error) {
+              logger.error('Failed to get MCP API actions:', error);
+              return port.postMessage({
+                type: 'error',
+                error: error instanceof Error ? error.message : 'Failed to get MCP API actions',
+              });
+            }
+          }
+
+          case 'mcp_delete_action': {
+            if (!message.actionId) return port.postMessage({ type: 'error', error: 'No action ID provided' });
+            try {
+              await MCPServer.deleteLearnedApiAction(message.actionId);
+              return port.postMessage({ type: 'success', msg: 'API action deleted successfully' });
+            } catch (error) {
+              logger.error('Failed to delete MCP API action:', error);
+              return port.postMessage({
+                type: 'error',
+                error: error instanceof Error ? error.message : 'Failed to delete MCP API action',
+              });
+            }
+          }
+
+          case 'mcp_consultation_request': {
+            try {
+              if (!message.task) return port.postMessage({ type: 'error', error: 'No task provided' });
+              if (!message.tabId) return port.postMessage({ type: 'error', error: 'No tab ID provided' });
+
+              logger.info('MCP consultation request via port:', message.task);
+
+              // Get current page context for MCP
+              const page = await browserContext.getCurrentPage();
+              if (!page) {
+                return port.postMessage({
+                  type: 'error',
+                  error: 'No active page found. Please navigate to a webpage first.',
+                });
+              }
+
+              const state = await page.getState();
+              if (!state) {
+                return port.postMessage({
+                  type: 'error',
+                  error: 'Could not get page state. Please refresh the page and try again.',
+                });
+              }
+
+              // Get a valid URL for context
+              let contextUrl = 'unknown';
+              if (state.url && state.url !== 'unknown' && state.url !== 'chrome://extensions/') {
+                try {
+                  // Validate URL
+                  new URL(state.url);
+                  contextUrl = state.url;
+                } catch (error) {
+                  // If URL is invalid, use a fallback
+                  contextUrl = 'unknown';
+                }
+              }
+
+              const taskContext = {
+                url: contextUrl,
+                pageTitle: state.title || 'Unknown Page',
+                elementCount: state.elementTree ? getClickableElements(state.elementTree).length : 0,
+                timestamp: Date.now(),
+              };
+
+              const mcpRequest = {
+                taskId: message.taskId || `consultation_${Date.now()}`,
+                task: message.task,
+                context: taskContext,
+              };
+
+              const mcpResponse = await MCPServer.processRequest(mcpRequest);
+
+              if (mcpResponse.success && !mcpResponse.isNewTask) {
+                // Use learned API actions for repeated requests
+                logger.info('Using learned API actions for consultation');
+                const result = await MCPServer.executeLearnedApiCalls(mcpResponse.learnedAction!);
+
+                return port.postMessage({
+                  type: 'mcp_consultation_result',
+                  success: true,
+                  usedLearnedActions: true,
+                  result,
+                });
+              } else {
+                // First time execution - use normal agent pipeline to learn
+                logger.info('First time consultation - executing with agents to learn');
+
+                try {
+                  // Start network monitoring for API learning
+                  MCPServer.startNetworkMonitoring(mcpRequest.taskId);
+
+                  // Set the task ID in browser context for network monitoring
+                  browserContext.setCurrentTaskId(mcpRequest.taskId);
+
+                  // Set up executor for normal execution
+                  const executor = await setupExecutor(mcpRequest.taskId, mcpRequest.task, browserContext);
+
+                  // Subscribe to executor events
+                  subscribeToExecutorEvents(executor);
+
+                  // Execute normally (this will learn from the execution)
+                  await executor.execute();
+
+                  // Wait a bit more to capture any delayed API calls
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+
+                  // Stop network monitoring and learn from it
+                  MCPServer.stopNetworkMonitoring(mcpRequest.taskId);
+
+                  // Learn from network monitoring
+                  await MCPServer.learnFromNetworkMonitoring(
+                    mcpRequest.taskId,
+                    mcpRequest.task,
+                    taskContext,
+                    0, // Default execution time
+                  );
+
+                  return port.postMessage({
+                    type: 'mcp_consultation_result',
+                    success: true,
+                    usedLearnedActions: false,
+                    message: 'Executed with agents - learned API calls from this execution',
+                  });
+                } catch (error) {
+                  logger.error('Failed to execute consultation with agents:', error);
+                  return port.postMessage({
+                    type: 'error',
+                    error: error instanceof Error ? error.message : 'Failed to execute consultation',
+                  });
+                }
+              }
+            } catch (error) {
+              logger.error('Failed to handle MCP consultation via port:', error);
+              return port.postMessage({
+                type: 'error',
+                error: error instanceof Error ? error.message : 'Failed to handle MCP consultation',
+              });
+            }
           }
 
           default:

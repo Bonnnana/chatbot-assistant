@@ -24,6 +24,8 @@ import { chatHistoryStore } from '@extension/storage/lib/chat';
 import type { AgentStepHistory } from './history';
 import type { GeneralSettingsConfig } from '@extension/storage';
 import { findFinkiWorkflow, executeFinkiWorkflow } from './actions/finkiWorkflows';
+import { MCPServer } from '../mcp';
+import type { TaskContext, MCPRequest, MCPResponse } from '../mcp/types';
 
 const logger = createLogger('Executor');
 
@@ -45,6 +47,8 @@ export class Executor {
   private readonly validatorPrompt: ValidatorPrompt;
   private readonly generalSettings: GeneralSettingsConfig | undefined;
   private tasks: string[] = [];
+  private mcpEnabled: boolean = true;
+  private executionStartTime: number = 0;
   constructor(
     task: string,
     taskId: string,
@@ -138,6 +142,16 @@ export class Executor {
 
     try {
       this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_START, this.context.taskId);
+
+      // Check MCP for learned actions first
+      if (this.mcpEnabled) {
+        const mcpResult = await this.checkMCPForLearnedActions();
+        if (mcpResult && !mcpResult.isNewTask) {
+          logger.info('Using learned actions from MCP server');
+          await this.executeLearnedActions(mcpResult);
+          return;
+        }
+      }
 
       // Check for FINKI workflow first - this bypasses the planner entirely
       const currentTask = this.tasks[this.tasks.length - 1];
@@ -277,6 +291,11 @@ export class Executor {
         await chatHistoryStore.storeAgentStepHistory(this.context.taskId, this.tasks[0], historyString);
       } else {
         logger.info('Replay historical tasks is disabled, skipping history storage');
+      }
+
+      // Learn from execution for MCP server
+      if (this.mcpEnabled) {
+        await this.learnFromExecution();
       }
     }
   }
@@ -466,5 +485,94 @@ export class Executor {
       lowerTask.includes('assignment') ||
       lowerTask.includes('задавање')
     );
+  }
+
+  /**
+   * Check MCP server for learned actions
+   */
+  private async checkMCPForLearnedActions(): Promise<MCPResponse | null> {
+    try {
+      const currentTask = this.tasks[this.tasks.length - 1];
+      const page = await this.context.browserContext.getCurrentPage();
+      const state = await page.getState();
+
+      const taskContext: TaskContext = {
+        url: state.url,
+        pageTitle: state.title,
+        elementCount: state.elementTree?.clickableElements?.length || 0,
+        timestamp: Date.now(),
+      };
+
+      const mcpRequest: MCPRequest = {
+        taskId: this.context.taskId,
+        task: currentTask,
+        context: taskContext,
+      };
+
+      const mcpResponse = await MCPServer.processRequest(mcpRequest);
+      return mcpResponse;
+    } catch (error) {
+      logger.error('Error checking MCP for learned actions:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Execute learned API actions from MCP server
+   */
+  private async executeLearnedActions(mcpResponse: MCPResponse): Promise<void> {
+    try {
+      if (!mcpResponse.learnedAction) {
+        throw new Error('No learned API action provided');
+      }
+
+      logger.info(`Executing learned API actions for task: ${mcpResponse.learnedAction.taskDescription}`);
+
+      // Execute the learned API actions with current task
+      const result = await MCPServer.executeLearnedApiCalls(
+        mcpResponse.learnedAction,
+        this.task, // Pass the current task
+      );
+
+      if (result.success) {
+        this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_OK, 'Task completed using learned API actions');
+        logger.info('Learned API actions executed successfully');
+      } else {
+        this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_FAIL, 'Learned API actions execution failed');
+        logger.error('Learned API actions execution failed');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Error executing learned API actions: ${errorMessage}`);
+      this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_FAIL, `Learned API actions failed: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Learn from the current execution and store in MCP
+   */
+  private async learnFromExecution(): Promise<void> {
+    try {
+      const currentTask = this.tasks[this.tasks.length - 1];
+      const executionTime = Date.now() - this.executionStartTime;
+
+      // Get current page state for context
+      const page = await this.context.browserContext.getCurrentPage();
+      const state = await page.getState();
+
+      const taskContext: TaskContext = {
+        url: state.url,
+        pageTitle: state.title,
+        elementCount: state.elementTree?.clickableElements?.length || 0,
+        timestamp: Date.now(),
+      };
+
+      // Learn from network monitoring (API-based learning)
+      await MCPServer.learnFromNetworkMonitoring(this.context.taskId, currentTask, taskContext, executionTime);
+
+      logger.info('Successfully learned API calls from execution');
+    } catch (error) {
+      logger.error('Error learning from execution:', error);
+    }
   }
 }

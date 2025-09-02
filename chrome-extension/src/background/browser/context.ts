@@ -15,6 +15,7 @@ export default class BrowserContext {
   private _config: BrowserContextConfig;
   private _currentTabId: number | null = null;
   private _attachedPages: Map<number, Page> = new Map();
+  private _currentTaskId: string | null = null;
 
   constructor(config: Partial<BrowserContextConfig>) {
     this._config = { ...DEFAULT_BROWSER_CONTEXT_CONFIG, ...config };
@@ -31,6 +32,14 @@ export default class BrowserContext {
   public updateCurrentTabId(tabId: number): void {
     // only update tab id, but don't attach it.
     this._currentTabId = tabId;
+  }
+
+  public setCurrentTaskId(taskId: string): void {
+    this._currentTaskId = taskId;
+  }
+
+  public getCurrentTaskId(): string | null {
+    return this._currentTaskId;
   }
 
   private async _getOrCreatePage(tab: chrome.tabs.Tab, forceUpdate = false): Promise<Page> {
@@ -69,6 +78,9 @@ export default class BrowserContext {
       logger.info('attachPage', page.tabId, 'already attached');
       return true;
     }
+
+    // Set the browser context reference on the page
+    page.setBrowserContext(this);
 
     if (await page.attachPuppeteer()) {
       logger.info('attachPage', page.tabId, 'attached');

@@ -143,14 +143,20 @@ const SidePanel = () => {
   }, [isReplaying]);
 
   const appendMessage = useCallback((newMessage: Message, sessionId?: string | null) => {
+    console.log('appendMessage called with:', newMessage);
+
     // Don't save progress messages
     const isProgressMessage = newMessage.content === 'Showing progress...';
 
     setMessages(prev => {
+      console.log('appendMessage - current messages:', prev);
       const filteredMessages = prev.filter(
         (msg, idx) => !(msg.content === 'Showing progress...' && idx === prev.length - 1),
       );
-      return [...filteredMessages, newMessage];
+      console.log('appendMessage - filtered messages:', filteredMessages);
+      const newMessages = [...filteredMessages, newMessage];
+      console.log('appendMessage - new messages:', newMessages);
+      return newMessages;
     });
 
     // Use provided sessionId if available, otherwise fall back to sessionIdRef.current
@@ -354,6 +360,23 @@ const SidePanel = () => {
           setIsProcessingSpeech(false);
         } else if (message && message.type === 'heartbeat_ack') {
           console.log('Heartbeat acknowledged');
+        } else if (message && message.type === 'mcp_consultation_result') {
+          // Handle MCP consultation results
+          console.log('Received MCP consultation result:', message);
+
+          if (message.success) {
+            appendMessage({
+              actor: Actors.SYSTEM,
+              content: message.message || 'Consultation completed successfully',
+              timestamp: Date.now(),
+            });
+          } else {
+            appendMessage({
+              actor: Actors.SYSTEM,
+              content: `❌ Consultation failed: ${message.error || 'Unknown error'}`,
+              timestamp: Date.now(),
+            });
+          }
         }
       });
 
@@ -582,6 +605,70 @@ const SidePanel = () => {
       // Process command and return if it was handled
       const wasHandled = await handleCommand(trimmedText);
       if (wasHandled) return;
+    }
+
+    // Check if this is a consultation request
+    if (
+      trimmedText.toLowerCase().includes('consultation') ||
+      trimmedText.toLowerCase().includes('schedule') ||
+      trimmedText.toLowerCase().includes('appointment')
+    ) {
+      console.log('Consultation request detected, using MCP server');
+
+      // Add the user's message first - ONLY use direct state update
+      const userMessage = {
+        actor: Actors.USER,
+        content: trimmedText,
+        timestamp: Date.now(),
+      };
+
+      console.log('Adding user message:', userMessage);
+
+      // ONLY use direct state update, don't call appendMessage
+      setMessages(prev => {
+        console.log('Current messages before adding user message:', prev);
+        const newMessages = [...prev, userMessage];
+        console.log('New messages after adding user message:', newMessages);
+        return newMessages;
+      });
+
+      try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tabId = tabs[0]?.id;
+        if (!tabId) {
+          throw new Error('No active tab found');
+        }
+
+        // Setup connection if not exists
+        if (!portRef.current) {
+          setupConnection();
+        }
+
+        // Send consultation request via port connection
+        sendMessage({
+          type: 'mcp_consultation_request',
+          task: trimmedText,
+          taskId: `consultation_${Date.now()}`,
+          tabId,
+        });
+
+        // Add a message indicating the consultation is being processed
+        appendMessage({
+          actor: Actors.SYSTEM,
+          content: '🔄 Processing consultation request via MCP server...',
+          timestamp: Date.now(),
+        });
+
+        return; // Exit early for consultation requests
+      } catch (error) {
+        console.error('Error handling consultation via MCP:', error);
+        appendMessage({
+          actor: Actors.SYSTEM,
+          content: `❌ Error: ${error instanceof Error ? error.message : 'Consultation failed'}`,
+          timestamp: Date.now(),
+        });
+        return; // Exit early for consultation requests
+      }
     }
 
     // Block sending messages in historical sessions

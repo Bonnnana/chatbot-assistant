@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .info { border-left: 4px solid #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 MCP System Test</h1>
+        <p>This page tests the MCP (Model Context Protocol) server functionality.</p>
+        
+        <div class="test-section">
+            <h3>📊 MCP Statistics</h3>
+            <button onclick="getMCPStats()">Get Learning Stats</button>
+            <button onclick="getAllActions()">Get All Learned Actions</button>
+            <div id="statsResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧹 MCP Management</h3>
+            <button onclick="clearAllActions()">Clear All Actions</button>
+            <button onclick="testMCPSystem()">Test MCP System</button>
+            <div id="managementResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Similarity Testing</h3>
+            <button onclick="testSimilarity()">Test Similarity Matching</button>
+            <div id="similarityResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Manual Test</h3>
+            <input type="text" id="testTask" placeholder="Enter a test task (e.g., 'Click the login button')" style="width: 100%; padding: 8px; margin: 5px 0;">
+            <button onclick="testManualTask()">Test Task</button>
+            <div id="manualResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test MCP Statistics
+        async function getMCPStats() {
+            try {
+                const response = await chrome.runtime.sendMessage({ type: 'mcp_stats' });
+                if (response.success) {
+                    displayResult('statsResult', JSON.stringify(response.stats, null, 2), 'success');
+                } else {
+                    displayResult('statsResult', `Error: ${response.error}`, 'error');
+                }
+            } catch (error) {
+                displayResult('statsResult', `Failed to get stats: ${error.message}`, 'error');
+            }
+        }
+
+        // Get all learned actions
+        async function getAllActions() {
+            try {
+                const response = await chrome.runtime.sendMessage({ type: 'mcp_get_actions' });
+                if (response.success) {
+                    displayResult('statsResult', `Found ${response.actions.length} learned actions:\n${JSON.stringify(response.actions, null, 2)}`, 'info');
+                } else {
+                    displayResult('statsResult', `Error: ${response.error}`, 'error');
+                }
+            } catch (error) {
+                displayResult('statsResult', `Failed to get actions: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear all learned actions
+        async function clearAllActions() {
+            try {
+                const response = await chrome.runtime.sendMessage({ type: 'mcp_clear_actions' });
+                if (response.success) {
+                    displayResult('managementResult', response.msg, 'success');
+                } else {
+                    displayResult('managementResult', `Error: ${response.error}`, 'error');
+                }
+            } catch (error) {
+                displayResult('managementResult', `Failed to clear actions: ${error.message}`, 'error');
+            }
+        }
+
+        // Test MCP System
+        async function testMCPSystem() {
+            try {
+                displayResult('managementResult', 'Testing MCP system...', 'info');
+                
+                // Test basic functionality
+                const stats = await chrome.runtime.sendMessage({ type: 'mcp_stats' });
+                if (stats.success) {
+                    displayResult('managementResult', `✅ MCP System is working!\nStats: ${JSON.stringify(stats.stats, null, 2)}`, 'success');
+                } else {
+                    displayResult('managementResult', `❌ MCP System test failed: ${stats.error}`, 'error');
+                }
+            } catch (error) {
+                displayResult('managementResult', `❌ MCP System test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test similarity matching
+        async function testSimilarity() {
+            try {
+                displayResult('similarityResult', 'Testing similarity matching...', 'info');
+                
+                // This would require a more complex setup with actual learned actions
+                displayResult('similarityResult', 'ℹ️ Similarity testing requires learned actions to be present. Try running some tasks first to generate learning data.', 'info');
+            } catch (error) {
+                displayResult('similarityResult', `❌ Similarity test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test manual task
+        async function testManualTask() {
+            const task = document.getElementById('testTask').value;
+            if (!task) {
+                displayResult('manualResult', 'Please enter a task to test', 'error');
+                return;
+            }
+
+            try {
+                displayResult('manualResult', `Testing task: "${task}"`, 'info');
+                
+                // This would simulate a task execution
+                displayResult('manualResult', `ℹ️ Task "${task}" would be processed by the MCP system.\nThe first execution would learn from the agents, subsequent similar requests would use learned actions.`, 'info');
+            } catch (error) {
+                displayResult('manualResult', `❌ Task test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Helper function to display results
+        function displayResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+
+        // Initialize page
+        window.onload = function() {
+            displayResult('statsResult', 'Click "Get Learning Stats" to see MCP system status', 'info');
+            displayResult('managementResult', 'Ready to test MCP management functions', 'info');
+            displayResult('similarityResult', 'Ready to test similarity matching', 'info');
+            displayResult('manualResult', 'Enter a task and click "Test Task" to simulate MCP processing', 'info');
+        };
+    </script>
+</body>
+</html>
